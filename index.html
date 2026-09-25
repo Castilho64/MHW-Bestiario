@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Hunter — Registro de Monstros</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+    <div class="bg-fundo"></div>
+
+    <div id="app" class="container">
+
+        <header class="cabecalho">
+            <p class="subtitulo">Caderneta do Caçador</p>
+            <h1>Monster Hunter</h1>
+        </header>
+
+        <div class="grid-principal">
+
+            <!-- ================================================
+                 COLUNA ESQUERDA — Formulário de cadastro manual
+                 Apenas monstros de origem 'manual' podem ser
+                 cadastrados, alterados e excluídos aqui.
+                 ================================================ -->
+            <div class="painel painel-formulario">
+                <h2 class="painel-titulo"><b>Registrar Monstro</b></h2>
+                <form @submit.prevent="salvar()">
+
+                    <div class="grupo-campo">
+                        <label for="nome"><b>Nome</b></label>
+                        <input type="text" id="nome" v-model="nome" placeholder="Ex: Rathalos">
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="especie"><b>Espécie</b></label>
+                        <select id="especie" v-model="especie">
+                            <option value="">— Selecionar —</option>
+                            <option>Serpe Voadora</option>
+                            <option>Serpe Bruta</option>
+                            <option>Serpe de Presas</option>
+                            <option>Anfíbios</option>
+                            <option>Dragão Ancião</option>
+                            <option>Temnocerano</option>
+                            <option>Leviatã</option>
+                            <option>Serpássaro</option>
+                        </select>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="tamanho"><b>Tamanho (metros)</b></label>
+                        <input type="number" id="tamanho" v-model="tamanho"
+                            placeholder="Ex: 5.68" min="0" step="0.01">
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="fraquezas"><b>Fraquezas</b></label>
+                        <input type="text" id="fraquezas" v-model="fraquezas" placeholder="Ex: Fogo, Trovão">
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="descricao"><b>Descrição</b></label>
+                        <textarea id="descricao" v-model="descricao" placeholder="Descreva o monstro..."></textarea>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="imagem"><b>URL da Imagem</b></label>
+                        <input type="url" id="imagem" v-model="imagem" placeholder="https://...">
+                    </div>
+
+                    <!--
+                        v-if/v-else — botão habilitado só quando verificar() = true
+                    -->
+                    <div v-if="verificar()">
+                        <button type="submit" class="btn-salvar">Salvar</button>
+                    </div>
+                    <div v-else>
+                        <button type="button" class="btn-salvar btn-salvar-desabilitado" disabled>Salvar</button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- ================================================
+                 COLUNA DIREITA — Bestário
+                 Exibe monstros da API + manuais juntos.
+                 ================================================ -->
+            <div class="painel painel-lista">
+                <h2 class="painel-titulo"><b>Bestário</b></h2>
+
+                <!-- Campos de busca -->
+                <div class="grupo-busca">
+                    <input type="text" v-model="buscaNome"      placeholder="Buscar por nome..."     class="input-busca">
+                    <input type="text" v-model="buscaEspecie"   placeholder="Buscar por espécie..."  class="input-busca">
+                    <input type="text" v-model="buscaFraquezas" placeholder="Buscar por fraquezas..." class="input-busca">
+                </div>
+
+                <!-- Carregando API -->
+                <p v-if="carregandoAPI" class="lista-vazia">Carregando monstros...</p>
+
+                <!-- Erro na API -->
+                <p v-else-if="erroAPI" class="lista-vazia">{{ erroAPI }}</p>
+
+                <!-- Nenhum resultado na busca -->
+                <p v-else-if="listaFiltrada.length === 0 && listaCompleta.length > 0" class="lista-vazia">
+                    Nenhum monstro encontrado.
+                </p>
+
+                <!-- Lista vazia (sem API e sem manuais) -->
+                <p v-else-if="listaCompleta.length === 0" class="lista-vazia">
+                    Nenhum monstro registrado ainda.
+                </p>
+
+                <!-- Tabela -->
+                <div v-else class="tabela-wrapper">
+                    <table class="tabela">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Espécie</th>
+                                <th>Tamanho</th>
+                                <th>Fraquezas</th>
+                                <th>Alterar</th>
+                                <th>Excluir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!--
+                                v-for percorre listaFiltrada (API + manuais filtrados).
+                                Clicar no nome abre o modal de detalhe.
+                                Alterar e Excluir só aparecem para monstros manuais.
+                            -->
+                            <tr v-for="monstro in listaFiltrada" :key="monstro.id || monstro.nome">
+
+                                <!-- Nome clicável — abre o modal -->
+                                <td>
+                                    <a href="#" class="nome-clicavel" @click.prevent="abrirModal(monstro)">
+                                        {{ monstro.nome }}
+                                    </a>
+                                </td>
+
+                                <td>{{ monstro.especie }}</td>
+                                <td>{{ monstro.tamanho }}m</td>
+                                <td>{{ monstro.fraquezas }}</td>
+
+                                <!--
+                                    Botões só aparecem para monstros manuais (origem = 'manual').
+                                    Monstros da API não podem ser editados ou excluídos.
+                                -->
+                                <td>
+                                    <a href="#" class="btn-tabela btn-alterar" @click.prevent="alterar(monstro)">Alterar</a>
+                                </td>
+
+                                <td>
+                                    <a href="#" class="btn-tabela btn-excluir" @click.prevent="excluir(monstro)">Excluir</a>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ====================================================
+             MODAL DE DETALHE
+             Aparece ao clicar no nome de um monstro na tabela.
+             Exibe: imagem, nome, kind/tamanho, fraquezas/resistências, descrição.
+             Fecha ao clicar no botão ✕ ou fora do modal.
+             ==================================================== -->
+        <div class="modal-overlay" v-if="monstroSelecionado" @click.self="fecharModal()">
+            <div class="modal-ficha">
+
+                <!-- Botão fechar -->
+                <button class="modal-fechar" @click="fecharModal()">✕</button>
+
+                <!-- Imagem do monstro -->
+                <div class="modal-imagem-wrap">
+                    <img
+                        v-if="monstroSelecionado.imagem"
+                        :src="monstroSelecionado.imagem"
+                        :alt="monstroSelecionado.nome"
+                        class="modal-imagem"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
+                    >
+                    <span class="modal-imagem-placeholder" style="display:none">🐉</span>
+                </div>
+
+                <!-- Nome -->
+                <h2 class="modal-nome">{{ monstroSelecionado.nome }}</h2>
+
+                <!-- Informações em grade -->
+                <div class="modal-info-grid">
+                    <div class="modal-info-item">
+                        <span class="modal-info-label">Espécie</span>
+                        <span class="modal-info-valor">{{ monstroSelecionado.especie }}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <span class="modal-info-label">Porte</span>
+                        <span class="modal-info-valor">{{ monstroSelecionado.kind || '—' }}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <span class="modal-info-label">Tamanho</span>
+                        <span class="modal-info-valor">{{ monstroSelecionado.tamanho }}m</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <span class="modal-info-label">Fraquezas</span>
+                        <span class="modal-info-valor">{{ monstroSelecionado.fraquezas }}</span>
+                    </div>
+                    <div class="modal-info-item" v-if="monstroSelecionado.resistencias">
+                        <span class="modal-info-label">Resistências</span>
+                        <span class="modal-info-valor">{{ monstroSelecionado.resistencias }}</span>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="modal-descricao" v-if="monstroSelecionado.descricao && monstroSelecionado.descricao !== '—'">
+                    <span class="modal-info-label">Descrição</span>
+                    <p>{{ monstroSelecionado.descricao }}</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- fim #app -->
+
+    <script src="app.js"></script>
+</body>
+</html>

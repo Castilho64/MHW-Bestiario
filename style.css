@@ -1,0 +1,682 @@
+/*
+ * style.css — Estilos do projeto Monster Hunter
+ * ─────────────────────────────────────────────────────────────
+ * Organização:
+ *   1.  Reset
+ *   2.  Variáveis globais
+ *   3.  Body
+ *   4.  Fundo fixo            ← Imagem do fundo fixada
+ *   5.  Container principal
+ *   6.  Cabeçalho
+ *   7.  Grid de dois painéis
+ *   8.  Painel (papel velho)  ← Textura de papel velho
+ *   9.  Título do painel
+ *  10.  Grupos de campo (label + input)
+ *  11.  Inputs e selects
+ *  12.  Botões Salvar
+ *  13.  Lista vazia
+ *  14.  Tabela
+ *  15.  Botões da tabela      ← Igual ao salvar
+ *  16.  Responsivo (mobile)
+ * ─────────────────────────────────────────────────────────────
+ */
+
+
+/* ─────────────────────────────────────────────────────────────
+   1. RESET
+   Zera margens e paddings de todos os elementos.
+   Garante que o tamanho dos elementos inclua borda e padding.
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   2. VARIÁVEIS GLOBAIS
+   Centraliza todas as cores, fontes e tamanhos do projeto.
+   Para mudar a identidade visual, edite apenas aqui.
+
+   Como usar: var(--nome-da-variavel) em qualquer propriedade CSS.
+   ───────────────────────────────────────────────────────────── */
+:root {
+    /* Fontes
+       --fonte-titulo → usada em títulos, labels, botões (estilo medieval)
+       --fonte-corpo  → usada no texto geral e inputs                       */
+    --fonte-titulo: 'Cinzel', Georgia, serif;
+    --fonte-corpo:  'Crimson Text', Georgia, serif;
+
+    /* Cores da página (fundo escuro) */
+    --cor-bg:            #0d0b08;   /* fundo geral da página */
+    --cor-texto:         #e8d9b8;   /* texto sobre fundo escuro */
+    --cor-texto-suave:   #9a8b6a;   /* labels e textos secundários */
+    --cor-texto-apagado: #5c5040;   /* placeholders e estados vazios */
+    --cor-borda:         #3d3020;   /* bordas dos inputs e painéis */
+    --cor-dourado:       #1a0f05;   /* cor de destaque dourada */
+    --cor-dourado-claro: #e8b55a;   /* dourado mais claro (títulos) */
+
+    /* Cores dos painéis (papel velho — fundo claro)
+       Estas variáveis são aplicadas dentro do .painel.
+       Quando você colocar a textura do PS, os textos já estarão
+       na cor certa para fundo claro.                             */
+    --painel-texto:          #1a0f05;
+    --painel-texto-suave:    #3d2510;
+    --painel-texto-apagado:  #6b4520;
+    --painel-borda:          rgba(80, 50, 20, 0.4);
+    --painel-input-bg:       rgba(180, 140, 80, 0.25);
+    --painel-input-foco:     rgba(255, 245, 220, 0.75); /* fundo do input focado */
+
+    /* Botões */
+    --btn-salvar-bg:     #64a004f8;
+    --btn-salvar-borda:  #335202f8;
+    --btn-salvar-texto:  #000000;
+    --btn-alterar-bg:    #7a5c10;
+    --btn-alterar-texto: #fff8e0;
+    --btn-excluir-bg:    #5a1010;
+    --btn-excluir-texto: #ffd5d5;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   3. BODY
+   Define a fonte, cor e fundo base da página inteira.
+   ───────────────────────────────────────────────────────────── */
+body {
+    font-family: var(--fonte-corpo);
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--cor-texto);
+    background-color: var(--cor-bg);
+    min-height: 100vh;
+}
+
+
+/* ─────────────────────────────────────────────────────────────                                                     
+    O ::after escurece a imagem para o texto ficar legível. 
+    Ajuste o 0.72 (0 = sem escurecimento, 1 = preto total)  
+   ───────────────────────────────────────────────────────────── */
+.bg-fundo {
+    position: fixed;      /* fica parado, não rola com a página */
+    inset: 0;             /* ocupa toda a tela (top/right/bottom/left = 0) */
+    z-index: 0;           /* fica atrás de todo o conteúdo */
+    pointer-events: none; /* não bloqueia cliques */
+
+    background-image: url('imagens/ruins_wpp.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Overlay escuro sobre a imagem de fundo */
+.bg-fundo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.62); /* ← ajuste a opacidade aqui */
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   5. CONTAINER PRINCIPAL
+   Centraliza o conteúdo e limita a largura máxima.
+   Aplicado em: <div id="app" class="container">
+   ───────────────────────────────────────────────────────────── */
+.container {
+    position: relative; /* fica acima do .bg-fundo (z-index: 0) */
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    isolation: isolate;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   6. CABEÇALHO
+   Bloco do topo com subtítulo e título principal.
+   Aplicado em: <header class="cabecalho">
+   ───────────────────────────────────────────────────────────── */
+.cabecalho {
+    background: rgba(10, 8, 5, 0.6);
+    border: 1px solid rgba(201, 147, 58, 0.2);
+    border-radius: 4px;
+    backdrop-filter: blur(6px);
+    border-radius: 4px;
+    padding: 1.5rem 1.5rem 1rem;
+    text-align: center;
+}
+
+/* Linha dourada decorativa abaixo do título */
+.cabecalho::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 2px;
+    margin: 1rem auto 0;
+    background: linear-gradient(90deg, transparent, var(--cor-dourado), transparent);
+}
+
+/* Texto pequeno acima do título ("Caderneta do Caçador") */
+/* Aplicado em: <p class="subtitulo"> */
+.subtitulo {
+    font-family: var(--fonte-titulo);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.4rem;
+}
+
+/* Título principal da página */
+h1 {
+    font-family: var(--fonte-titulo);
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cor-dourado-claro);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   7. GRID DE DOIS PAINÉIS
+   Divide a tela em duas colunas: formulário (esq) e tabela (dir).
+   Aplicado em: <div class="grid-principal">
+   ───────────────────────────────────────────────────────────── */
+.grid-principal {
+    display: grid;
+    grid-template-columns: 295px 1fr; /*grid-template-columns: 1fr 1fr */
+    gap: 2rem;
+    align-items: start;
+    background-image: url('imagens/papelwpp.png');
+    background-size: 100% 100%; /* estica para cobrir exatamente os dois painéis */
+    background-repeat: repeat-y; /* repete o papel para baixo conforme cresce */
+    padding: 4rem 3rem;
+    border-radius: 4px;
+}
+
+
+.painel {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 1.75rem;
+
+    color:               var(--painel-texto);
+    --cor-texto:         var(--painel-texto);
+    --cor-texto-suave:   var(--painel-texto-suave);
+    --cor-texto-apagado: var(--painel-texto-apagado);
+    --cor-borda:         var(--painel-borda);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   9. TÍTULO DO PAINEL
+   H2 interno de cada painel ("Registrar Monstro", "Bestário").
+   Aplicado em: <h2 class="painel-titulo">
+   ───────────────────────────────────────────────────────────── */
+.painel-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #3d2510;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+    border-bottom-color: rgba(80, 50, 20, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   10. GRUPOS DE CAMPO (label + input)
+   Espaçamento entre cada campo do formulário.
+   Aplicado em: <div class="grupo-campo">
+   ───────────────────────────────────────────────────────────── */
+.grupo-campo {
+    margin-bottom: 1.1rem;
+}
+
+/* Label de cada campo */
+.grupo-campo label {
+    display: block;
+    font-family: var(--fonte-titulo);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.35rem;
+}
+
+.grupo-busca {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.painel .input-busca {
+    width: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   11. INPUTS E SELECTS
+   Estilo dos campos de texto e listas suspensas.
+   Aplicado em: <input> e <select> dentro do .painel
+   ───────────────────────────────────────────────────────────── */
+.painel input,
+.painel select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.8rem;
+    font-family: var(--fonte-corpo);
+    font-size: 16px;
+    color: #1a0f05;
+    background: rgba(180, 140, 80, 0.25);
+    border: 1px solid rgba(80, 50, 20, 0.4);
+    border-radius: 3px;
+    outline: none;
+    appearance: none;
+    transition: border-color 0.2s;
+}
+
+.painel input:focus,
+.painel select:focus {
+    border-color: #3d2510;
+    background: rgba(180, 140, 80, 0.45);
+}
+
+.painel input::placeholder {
+    color: #6b4520;
+}
+
+.painel select option {
+    background: #d4b483; /* fundo claro para as opções do dropdown */
+    color: #1a0f05;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   12. BOTÃO SALVAR
+   Botão de envio do formulário.
+   Aplicado em: <button class="btn-salvar">
+   ───────────────────────────────────────────────────────────── */
+.btn-salvar {
+    width: 100%;
+    padding: 0.7rem;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    font-family: var(--fonte-titulo);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: #5a3e1b;
+    border: 1px solid #7a5c2a;
+    border-radius: 3px;
+    transition: opacity 0.2s;
+}
+
+.btn-salvar:hover {
+    opacity: 0.85;
+}
+
+/* Estado desabilitado — quando verificar() retorna false */
+.btn-salvar-desabilitado {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   13. MENSAGEM DE LISTA VAZIA
+   Texto exibido quando não há monstros cadastrados.
+   Aplicado em: <p class="lista-vazia">
+   ───────────────────────────────────────────────────────────── */
+.lista-vazia {
+    font-family: var(--fonte-titulo);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cor-texto-apagado);
+    text-align: center;
+    padding: 2.5rem 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   14. TABELA DE MONSTROS
+   Listagem dos monstros cadastrados.
+   Aplicado em: <table class="tabela"> e seus filhos.
+   ───────────────────────────────────────────────────────────── */
+
+/* Wrapper para scroll horizontal em telas pequenas */
+.tabela-wrapper {
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse; /* remove espaço entre células */
+    font-size: 15px;
+}
+
+/* Cabeçalho da tabela */
+.tabela thead tr {
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.tabela th {
+    font-family: var(--fonte-titulo);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cor-dourado);
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Linhas do corpo da tabela */
+.tabela td {
+    padding: 0.6rem 0.75rem;
+    color: var(--cor-texto);
+    border-bottom: 1px solid rgba(61, 48, 32, 0.5);
+    vertical-align: middle;
+}
+
+/* Linhas com cor alternada (zebra) */
+.tabela tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tabela tbody tr:hover {
+    background: rgba(201, 147, 58, 0.06);
+}
+
+/* Miniatura de imagem na tabela */
+/* Aplicado em: <img class="tabela-img"> */
+.tabela-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    border-radius: 2px;
+    display: block;
+}
+
+/* Emoji placeholder quando não há imagem */
+/* Aplicado em: <span class="tabela-img-placeholder"> */
+.tabela-img-placeholder {
+    font-size: 1.5rem;
+    display: block;
+    text-align: center;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   15. BOTÕES DA TABELA (Alterar / Excluir)
+   Links estilizados como botões nas colunas de ação.
+   Aplicado em: <a class="btn-tabela btn-alterar"> e btn-excluir
+   ───────────────────────────────────────────────────────────── */
+.btn-tabela {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    font-family: var(--fonte-titulo);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+.btn-tabela:hover {
+    opacity: 0.8;
+}
+
+/* Botão Alterar*/
+.btn-alterar {
+    color: #ffffff;
+    background: #5a4a10;
+    border: 1px solid #7a6a20;
+}
+
+/* Botão Excluir*/
+.btn-excluir {
+    color: #ffffff;
+    background: #5a1a1a;
+    border: 1px solid #7a2a2a;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   16. RESPONSIVO — telas pequenas (até 700px)
+   Em mobile, os dois painéis empilham em coluna única.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+    .grid-principal {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NOME CLICÁVEL NA TABELA
+   Link no nome do monstro que abre o modal de detalhe.
+   Aplicado em: <a class="nome-clicavel">
+   ───────────────────────────────────────────────────────────── */
+.nome-clicavel {
+    color: var(--painel-texto);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px solid var(--painel-borda);
+    transition: opacity 0.2s;
+}
+
+.nome-clicavel:hover {
+    opacity: 0.7;
+}
+
+/* Traço exibido nas colunas Alterar/Excluir para monstros da API */
+.btn-api {
+    color: var(--painel-texto-apagado);
+    font-size: 14px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   MODAL DE DETALHE — OVERLAY
+   Fundo escuro semitransparente que aparece atrás da ficha.
+   Fechar ao clicar fora (@click.self no HTML).
+   Aplicado em: <div class="modal-overlay">
+   ───────────────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MODAL DE DETALHE — FICHA
+   Painel interno com as informações do monstro.
+   Usa a mesma textura de papel dos painéis principais.
+   Aplicado em: <div class="modal-ficha">
+   ───────────────────────────────────────────────────────────── */
+.modal-ficha {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 4px;
+    padding: 2rem 2rem 12rem 2rem; /* mais espaço embaixo */
+    background-size: 100% auto;
+    background-repeat: repeat-y; /* mesmo esquema do grid-principal */
+
+    /* Mesma textura de papel dos painéis — troque pelo mesmo caminho que usou no .painel */
+    background-image: url('imagens/papelwpp.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top center;
+
+    /* Cores do texto sobre papel */
+    color:               var(--painel-texto);
+    --cor-texto:         var(--painel-texto);
+    --cor-texto-suave:   var(--painel-texto-suave);
+    --cor-texto-apagado: var(--painel-texto-apagado);
+
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+    animation: modal-entrar 0.2s ease;
+}
+
+@keyframes modal-entrar {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* Botão fechar (✕) no canto superior direito */
+/* Aplicado em: <button class="modal-fechar"> */
+.modal-fechar {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--painel-borda);
+    color: var(--painel-texto-suave);
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.modal-fechar:hover {
+    color: var(--painel-texto);
+    border-color: var(--painel-texto);
+}
+
+/* Container da imagem do monstro no modal */
+/* Aplicado em: <div class="modal-imagem-wrap"> */
+.modal-imagem-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Imagem do monstro (ícone da pasta local) */
+/* Aplicado em: <img class="modal-imagem"> */
+.modal-imagem {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+}
+
+/* Emoji fallback quando a imagem não existe */
+/* Aplicado em: <span class="modal-imagem-placeholder"> */
+.modal-imagem-placeholder {
+    font-size: 5rem;
+    display: block;
+    text-align: center;
+}
+
+/* Nome do monstro centralizado no modal */
+/* Aplicado em: <h2 class="modal-nome"> */
+.modal-nome {
+    font-family: var(--fonte-titulo);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--painel-texto);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--painel-borda);
+}
+
+/* Grade de informações (espécie, porte, tamanho, fraquezas, resistências) */
+/* Aplicado em: <div class="modal-info-grid"> */
+.modal-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Cada item da grade */
+/* Aplicado em: <div class="modal-info-item"> */
+.modal-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+/* Label de cada informação ("Espécie", "Tamanho" etc.) */
+/* Aplicado em: <span class="modal-info-label"> */
+.modal-info-label {
+    font-family: var(--fonte-titulo);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #3d2510; /* mais escuro */
+    font-weight: 600;
+}
+
+/* Valor de cada informação */
+/* Aplicado em: <span class="modal-info-valor"> */
+.modal-info-valor {
+    font-size: 15px;
+    color: var(--painel-texto);
+}
+
+/* Bloco de descrição no rodapé do modal */
+/* Aplicado em: <div class="modal-descricao"> */
+.modal-descricao {
+    border-top: 1px solid var(--painel-borda);
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.modal-descricao p {
+    font-size: 20px;
+    line-height: 1.7;
+    color: var(--painel-texto);
+    /*font-style: italic;*/
+}
+
+.painel textarea {
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    font-family: var(--fonte-corpo);
+    font-size: 16px;
+    color: #1a0f05;
+    background: rgba(180, 140, 80, 0.25);
+    border: 1px solid rgba(80, 50, 20, 0.4);
+    border-radius: 3px;
+    outline: none;
+    resize: vertical; /* permite redimensionar só verticalmente */
+    min-height: 80px;
+    transition: border-color 0.2s;
+}
+
+.painel textarea:focus {
+    border-color: #3d2510;
+    background: rgba(180, 140, 80, 0.45);
+}
+
+.painel textarea::placeholder {
+    color: #6b4520;
+}
